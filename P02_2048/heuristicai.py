@@ -1,9 +1,10 @@
 import random
 import game
 import sys
+import numpy as np
 
 # Author:				chrn (original by nneonneo)
-# Date:				11.11.2016
+# Date:				    11.11.2016
 # Description:			The logic of the AI to beat the game.
 
 UP, DOWN, LEFT, RIGHT = 0, 1, 2, 3
@@ -16,6 +17,37 @@ def find_best_move(board):
 	# Your own agent don't have to beat the game.
     bestmove = find_best_move_random_agent()
     return bestmove
+
+def score_board(board):
+    # count empty fields
+    empty_fields = board.flatten().count_nonzero(board==0)
+
+    # desirable positions
+    desirability_matrix = np.array([[3, 2, 3, 3],
+                                    [2, 1, 1, 2],
+                                    [2, 1, 1, 2],
+                                    [3, 2, 2, 3]], dtype=np.float64)
+    desirable_positions = np.multiply(board, desirability_matrix).flatten().sum()
+
+    # score
+    score = board.flatten().sum()
+
+    # neighbour score
+    neighbour_score = 0
+    for i in range(3):
+        for j in range(3):
+            if board[i, j] == board[i+1,j]:
+                neighbour_score += board[i,j]
+            if board[i, j] == board[i,j+1]:
+                neighbour_score += board[i,j]
+    
+    # weight scores and return
+    EMPTY_FIELDS = 3
+    DESIRABLE = 1
+    SCORE = 0.8
+    NEIGHBOUR = 2
+
+    return EMPTY_FIELDS*empty_fields + DESIRABLE*desirable_positions + SCORE*score + NEIGHBOUR*neighbour_score
 
 def find_best_move_random_agent():
     return random.choice([UP,DOWN,LEFT,RIGHT])

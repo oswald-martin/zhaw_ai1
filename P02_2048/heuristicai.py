@@ -75,3 +75,49 @@ def board_equals(board, newboard):
     Check if two boards are equal
     """
     return (newboard == board).all()
+
+
+def simBoards(board):
+    '''
+    takes board as input and simulates the 4 moves(without the random item added)
+    returns: up,right,down,left ->clockwise
+    '''
+    right = board
+    down = np.rot90(board,1)
+    left = np.rot90(board,2)
+    up = np.rot90(board,3)
+
+    right = MoveSim(right)
+    down = MoveSim(down)
+    left = MoveSim(left)
+    up = MoveSim(up)
+
+    down = np.rot90(down,3)
+    left = np.rot90(left,2)
+    up = np.rot90(up,1)
+    return up,right,down,left
+
+
+def MoveSim(board):
+    board = np.array(board)
+    newboard = np.zeros_like(board)
+    for j in range(len(board)):
+        line = board[j]
+        line = line[line!=0]
+        i = 1
+        
+        while i < len(line):
+        
+            if line[-i] == line[-i-1]:
+                line[-i] *=2
+                line = np.delete(line,-i-1)
+                i+=1
+            i+=1
+                
+        zeroes = [0]* (4-len(line))
+    
+        newLine = np.concatenate((zeroes,line))
+        newboard[j] = newLine
+    
+    return newboard
+

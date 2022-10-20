@@ -12,17 +12,24 @@ UP, DOWN, LEFT, RIGHT = 0, 1, 2, 3
 
 def find_best_move(board):
     bestmove = -1
+    moves = [UP,RIGHT,DOWN,LEFT]
+    movesres = simBoards(board)
 
+    scores = [eval_board(np.array(moveres)) for moveres in movesres]
+
+    best = np.argmax(scores)
     # TODO:
     # Build a heuristic agent on your own that is much better than the random agent.
     # Your own agent don't have to beat the game.
-    bestmove = find_best_move_random_agent()
+    bestmove = moves[best]
     return bestmove
 
 
 def eval_board(board):
+
+    if np.array_equal(board,np.array(None)):return 0
     # count empty fields
-    empty_fields = board.flatten().count_nonzero(board == 0)
+    empty_fields = np.count_nonzero(board.flatten() == 0)
 
     # desirable positions
     desirability_matrix = np.array([[3, 2, 3, 3],
@@ -41,9 +48,9 @@ def eval_board(board):
                 neighbour_score += board[i, j]
 
     # weight scores and return
-    EMPTY_FIELDS = 3
+    EMPTY_FIELDS = 100
     DESIRABLE = 1
-    NEIGHBOUR = 2
+    NEIGHBOUR = 0
 
     return EMPTY_FIELDS*empty_fields + DESIRABLE*desirable_positions + NEIGHBOUR*neighbour_score
 
@@ -95,6 +102,12 @@ def simBoards(board):
     down = np.rot90(down,3)
     left = np.rot90(left,2)
     up = np.rot90(up,1)
+
+    if np.array_equal(board,up):    up = None
+    if np.array_equal(board,right): right = None
+    if np.array_equal(board,down):  down = None
+    if np.array_equal(board,left):  left = None
+
     return up,right,down,left
 
 

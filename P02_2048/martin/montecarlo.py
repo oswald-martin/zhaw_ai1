@@ -1,22 +1,22 @@
 from copy import deepcopy
-from random import choice
-from game import Board
+from random import choices
+from py_game import Game
 import numpy as np
 
 LEFT, UP, RIGHT, DOWN = 0, 1, 2, 3
-
 MOVES = [LEFT, UP, RIGHT, DOWN]
 
 
 class MCTS:
-    def __init__(self, board: Board, parent=None, parent_move=None) -> None:
-        self.board = board
+    def __init__(self, board, parent=None, parent_move=None, heuristic=None) -> None:
+        self.game = Game(board)
         self.parent = parent
         self.parent_move = parent_move
         self.children = []
-        self.__branch = board.branch()
+        self.__branch = Game(board).branch()
         self.__nr_visits = 0
         self.__score = 0
+        self.__heurisic = heuristic
 
     def q(self) -> int:
         return self.__score
@@ -25,7 +25,7 @@ class MCTS:
         return self.__nr_visits
 
     def __is_terminal_node__(self):
-        return self.board.game_over
+        return self.game.game_over
 
     def __selection__(self):
         current_node = self
@@ -37,16 +37,17 @@ class MCTS:
         return current_node
 
     def __expand__(self):
-        move = choice(list(self.__branch.keys()))
-        next_board = self.__branch.pop(move)
-        child_node = MCTS(next_board, self, move)
+        move = choices(list(self.__branch.keys()), k=1)[0]
+        next_board = self.__branch.pop(move).get_board()
+        child_node = MCTS(next_board, self, move, self.__heurisic)
         self.children.append(child_node)
         return child_node
 
     def __play_out__(self):
-        board = deepcopy(self.board)
+        board = deepcopy(self.game)
         while not board.game_over:
-            move = choice(MOVES)
+            probs = self.__heurisic.branch_eval(self.game.get_board())
+            move = choices(MOVES, cum_weights=probs, k=1)[0]
             board.make_move(move)
         return board.get_score()
 
@@ -64,9 +65,8 @@ class MCTS:
         return self.children[np.argmax(choices_weights)]
 
     def best_move(self, simulation_no):
-        for i in range(simulation_no):
+        for _ in range(simulation_no):
             v = self.__selection__()
             score = v.__play_out__()
             v.__backpropagate__(score)
-
         return self.__best_child__(c_param=0.).parent_move
